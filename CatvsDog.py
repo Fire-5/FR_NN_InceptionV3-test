@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 # TODO: Нужно заставить дома работать на GPU.
-#  Пока что ругается и дулает на основном процессоре
+#  Пока что ругается и делает на основном процессоре
 
 
 def scalePicture(img, x, y):
@@ -28,7 +28,7 @@ def showPicture(image):
     cv2.destroyAllWindows()
 
 
-def transform_gray(image):  # Перевод иозбражения из цветной в ч/б
+def transform_gray(image):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ret, threshold_image = cv2.threshold(gray_image, 127, 255, 0)
     return gray_image
