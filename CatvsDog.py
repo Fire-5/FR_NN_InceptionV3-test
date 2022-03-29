@@ -96,6 +96,7 @@ for layer in base_model.layers:
     layer.trainable = False
 
 # ---> Обучение модели <---
+# model = base_model
 model.compile(optimizer=keras.optimizers.Adam(),
               loss=keras.losses.BinaryCrossentropy(from_logits=True),  # 'categorical_crossentropy'
               metrics=[keras.metrics.BinaryAccuracy()])
@@ -125,15 +126,14 @@ ax.set_ylabel('accuracy')
 ax.set_xlabel('epoch')
 ax.legend(['train', 'test'], loc='upper left')
 plt.show()
-plt.close()
 
 # fig = plt.figure()
-ay = fig.add_subplot(111)
-ay = plt.plot(history.history['loss'])
-ay.plot(history.history['val_loss'])  # RAISE ERROR
-# ay.title('model loss')
-ay.set_ylabel('loss')
-ay.set_xlabel('epoch')
-ay.legend(['train', 'test'], loc='upper left')
-plt.show()
-plt.close()
+# ay = fig.add_subplot(111)
+# ay = plt.plot(history.history['loss'])
+# ay.plot(history.history['val_loss'])  # RAISE ERROR
+# # ay.title('model loss')
+# ay.set_ylabel('loss')
+# ay.set_xlabel('epoch')
+# ay.legend(['train', 'test'], loc='upper left')
+# plt.show()
+# plt.close()
