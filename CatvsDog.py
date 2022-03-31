@@ -34,35 +34,40 @@ def transform_gray(image):
     return gray_image
 
 
-# ---> Нобор и создание датасета <---
+def getDataset(path, lenght):
+    # ---> Нобор и создание датасета <---
+    dataset_value = []
+    dataset_key = []
+    os.chdir(path)
+    count = 0
+
+    for dir in os.listdir():
+        os.chdir(dir)
+        for file in os.listdir()[:lenght]:
+            # print('>>>', file)
+            if '.db' == file:
+                continue
+            image = cv2.imread(file)
+            if image is None:
+                continue
+            # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            image_2 = scalePicture(image, 299, 299)
+            dataset_value.append(np.array(image_2).astype('float32'))
+            dataset_key.append(count)
+
+        os.chdir('..')
+        count += 1
+
+    dataset_value = np.asarray(dataset_value)
+    dataset_value = tf.keras.applications.inception_v3.preprocess_input(dataset_value, data_format=None)
+    dataset_key = np.asarray(dataset_key)
+
+    return dataset_value, dataset_key
+
+
 PATH = os.getcwd()
-print('[+] PATH:', PATH)
-x = []
-y = []
 
-os.chdir(PATH + '/dataset/PetImages')
-count = 0
-for dir in os.listdir():
-    os.chdir(dir)
-    for file in os.listdir()[:500]:
-        # print('>>>', file)
-        if '.db' == file:
-            continue
-        image = cv2.imread(file)
-        if image is None:
-            continue
-        # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        image_2 = scalePicture(image, 299, 299)
-        x.append(np.array(image_2).astype('float32'))
-        y.append(count)
-
-    os.chdir('..')
-    count += 1
-
-x = np.asarray(x)
-y = np.asarray(y)
-x = tf.keras.applications.inception_v3.preprocess_input(x, data_format=None)
-
+x, y = getDataset(PATH + '/dataset/PetImages/', lenght=1000)
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
 X_train = np.asarray(X_train)
@@ -89,51 +94,62 @@ x = base_model.output
 x = keras.layers.GlobalAveragePooling2D()(x)
 x = keras.layers.Dense(1024, activation='relu')(x)
 predictions = keras.layers.Dense(1, activation='softmax')(x)
+
 model = keras.models.Model(inputs=base_model.input,
                            outputs=predictions)
 
 for layer in base_model.layers:
     layer.trainable = False
 
-# ---> Обучение модели <---
+
 # model = base_model
-model.compile(optimizer=keras.optimizers.Adam(),
-              loss=keras.losses.BinaryCrossentropy(from_logits=True),  # 'categorical_crossentropy'
-              metrics=[keras.metrics.BinaryAccuracy()])
+model.compile(optimizer='rmsprop',
+              loss='categorical_crossentropy')
+
+# ---> Обучение модели <---
+history = model.fit(X_train,
+                    y_train,
+                    epochs=3,
+                    batch_size=50,
+                    validation_data=(X_test, y_test))
+
+# ---> Тонкая настройка модели <---
+for i, layer in enumerate(base_model.layers):
+   print(i, layer.name)
+
+for layer in model.layers[:249]:
+   layer.trainable = False
+for layer in model.layers[249:]:
+   layer.trainable = True
+
+model.compile(optimizer=keras.optimizers.SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')
 
 history = model.fit(X_train,
                     y_train,
-                    epochs=1,
+                    epochs=3,
+                    batch_size=50,
                     validation_data=(X_test, y_test))
 
-# TODO: Посмотреть, как правильно сохранять модель в файл.
-#  Пока ругается на какую то чепушню...
-# history.save_model('model.h5')
+model.save(PATH + '/my_model.h5')
+
+# history = model.load(PATH + '/my_model.h5')
 
 model.summary()
 print(history.history.keys())
 # summarize history for accuracy (jupyter only)
-# TODO: Посмотреть, как лучше строить окно и делать графики.
-#  Что-то не вспомнилось сразу...
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
+plt.style.use('_mpl-gallery')
 
-ax.plot(history.history['binary_accuracy'])
-ax.plot(history.history['val_binary_accuracy'])  # RAISE ERROR
-# ax.title('model accuracy')
-ax.set_ylabel('accuracy')
-ax.set_xlabel('epoch')
-ax.legend(['train', 'test'], loc='upper left')
+fig, ax = plt.subplots(2, 1)
+
+# ax[0].plot(history.history['binary_accuracy'], history.history['val_binary_accuracy'])  # RAISE ERROR
+ax[0].plot(history.history['loss'], history.history['val_loss'])  # RAISE ERROR
+
+ax[0].set_ylabel('accuracy')
+ax[0].set_xlabel('epoch')
+ax[1].set_ylabel('loss')
+ax[0].legend(['train', 'test'], loc='upper left')
+
+fig.tight_layout()
 plt.show()
-
-# fig = plt.figure()
-# ay = fig.add_subplot(111)
-# ay = plt.plot(history.history['loss'])
-# ay.plot(history.history['val_loss'])  # RAISE ERROR
-# # ay.title('model loss')
-# ay.set_ylabel('loss')
-# ay.set_xlabel('epoch')
-# ay.legend(['train', 'test'], loc='upper left')
-# plt.show()
-# plt.close()
+plt.close()
