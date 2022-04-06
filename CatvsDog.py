@@ -9,6 +9,20 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
 
 
+<<<<<<< Updated upstream
+=======
+# TODO: Нужно заставить дома работать на GPU.
+#  Пока что ругается и делает на основном процессоре
+
+# TODO: Задачи на сегодня:
+#   + Добить работу на GPU
+#   - Сделать аугментацию выборки
+#   - Обучить нейросеть и добиться результатов
+#   - Результат сделать в виде графиков.
+#   - Результат скинуть Анне.
+
+
+>>>>>>> Stashed changes
 def scalePicture(img, x, y):
     dim = (x, y)
     resized = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
