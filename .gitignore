@@ -135,3 +135,7 @@ dmypy.json
 
 *.zip
 *.h5
+*.jpg
+*.png
+
+*.jpg
