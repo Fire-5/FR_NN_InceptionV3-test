@@ -1,28 +1,28 @@
+# TODO:
+#  [ ] 1. Собрать датасет в функцию.
+#  [ ] 2. Собрать модель нейросети и отладить.
+#  [ ] 3. Поставить на обучение.
+#  [ ] 4. Вывести метрики Recall.
+#  [ ] 5. Зафиксировать результат.
+
 import os
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
+
+# Windows
 from tensorflow import keras
-from tensorflow.keras.optimizers import RMSprop
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import matplotlib.pyplot as plt
+from keras.optimizer_v2.rmsprop import RMSprop
+from keras.preprocessing.image import ImageDataGenerator
 
 
-<<<<<<< Updated upstream
-=======
-# TODO: Нужно заставить дома работать на GPU.
-#  Пока что ругается и делает на основном процессоре
-
-# TODO: Задачи на сегодня:
-#   + Добить работу на GPU
-#   - Сделать аугментацию выборки
-#   - Обучить нейросеть и добиться результатов
-#   - Результат сделать в виде графиков.
-#   - Результат скинуть Анне.
+# Linux
+# from tensorflow.keras.optimizers import RMSprop
+# from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
->>>>>>> Stashed changes
 def scalePicture(img, x, y):
     dim = (x, y)
     resized = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
@@ -45,42 +45,53 @@ def transform_gray(image):
     ret, threshold_image = cv2.threshold(gray_image, 127, 255, 0)
     return gray_image
 
+
 # ---> Нобор и создание датасета <---
 # Полезное чтиво
 # https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/image/ImageDataGenerator
 # https://gist.github.com/fchollet/0830affa1f7f19fd47b06d4cf89ed44d
 PATH = os.getcwd()
 
-train_data_dir = PATH + '/dataset/train'
-validation_data_dir = PATH + '/dataset/validation'
+# train_data_dir = PATH + '/dataset/train'
+# validation_data_dir = PATH + '/dataset/validation'
 img_width, img_height = 150, 150
-batch_size = 16
+batch_size = 32
+
+
+os.chdir('/dataset_soil')
+for dir_name in os.listdir():
+    os.chdir(dir_name)
+    for img_name in os.listdir():
+        image = openPicture(img_name)
+
+    os.chdir('..')
+
 
 train_datagen = ImageDataGenerator(
-      rescale=1./255, # изменения по размерам изображения
-      rotation_range=40,  # диапазон, в пределах которого можно произвольно поворачивать изображения
-      width_shift_range=0.2,  # это диапазоны (в виде доли от общей ширины или высоты), в пределах которых можно
-      height_shift_range=0.2, # произвольно перемещать изображения по вертикали или горизонтали
-      shear_range=0.2,  # предназначен для случайного применения преобразований сдвига
-      zoom_range=0.2,  # предназначен для случайного масштабирования внутри изображений
-      horizontal_flip=True, # предназначен для случайного переворачивания половины изображений по горизонтали
-      fill_mode='nearest' # заполнения вновь созданных пикселей, которые могут появиться после поворота или сдвига
-)
-test_datagen = ImageDataGenerator(rescale=1./255,)
-
-train_gen = train_datagen.flow_from_directory(
-    train_data_dir,
-    target_size=(img_width, img_height),
-    batch_size=batch_size,
-    class_mode='binary'
+    rescale=1. / 255,  # изменения по размерам изображения
+    rotation_range=40,  # диапазон, в пределах которого можно произвольно поворачивать изображения
+    width_shift_range=0.2,  # это диапазоны (в виде доли от общей ширины или высоты), в пределах которых можно
+    height_shift_range=0.2,  # произвольно перемещать изображения по вертикали или горизонтали
+    shear_range=0.2,  # предназначен для случайного применения преобразований сдвига
+    zoom_range=0.2,  # предназначен для случайного масштабирования внутри изображений
+    horizontal_flip=True,  # предназначен для случайного переворачивания половины изображений по горизонтали
+    fill_mode='nearest'  # заполнения вновь созданных пикселей, которые могут появиться после поворота или сдвига
 )
 
-test_gen = test_datagen.flow_from_directory(
-    validation_data_dir,
-    target_size=(img_width, img_height),
-    batch_size=batch_size,
-    class_mode='binary'
-)
+# train_gen = train_datagen.flow_from_directory(
+#     train_data_dir,
+#     target_size=(img_width, img_height),
+#     batch_size=batch_size,
+#     class_mode='binary'
+# )
+
+test_datagen = ImageDataGenerator(rescale=1. / 255, )
+# test_gen = test_datagen.flow_from_directory(
+#     validation_data_dir,
+#     target_size=(img_width, img_height),
+#     batch_size=batch_size,
+#     class_mode='binary'
+# )
 
 # ---> Создание модели <---
 input_tensor = keras.layers.Input(shape=(150, 150, 3))
